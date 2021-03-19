@@ -1,4 +1,14 @@
 ---
+- name: Add specified repository into sources list
+  become: yes
+  ansible.builtin.apt_repository:
+    repo: "{{ item }}"
+    state: present
+    update_cache: false
+    mode: "0644"
+  with_items: "{{ mirror_urls }}"
+  when: enable_mirror
+
 - name: Check if i386 architecture is available
   shell: "dpkg --print-foreign-architectures"
   register: arch
@@ -10,74 +20,89 @@
 
 - name: Install all necessary libs and packages (64-bit)
   become: yes
-  apt: 
-    pkg: "{{ item }}"
-    state: installed 
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - build-essential
+      - gcc-multilib
+      - libxext-dev:i386
+      - libxpm-dev:i386
+      - x11proto-xext-dev:i386
+      - mercurial
+    state: present
     update_cache: true
-  with_items:
-    - build-essential
-    - gcc-multilib
-    - libxext-dev:i386
-    - libxpm-dev:i386
-    - x11proto-xext-dev:i386
-    - mercurial
   when: ansible_architecture == "x86_64"
 
 - name: Install all necessary libs and packages (32-bit)
   become: yes
-  apt: 
-    pkg: "{{ item }}"
-    state: installed 
+  apt:
+    pkg:
+      - apt-transport-https
+      - ca-certificates
+      - build-essential
+      - gcc-multilib
+      - libxext-dev
+      - libxpm-dev
+      - x11proto-xext-dev
+      - mercurial
+    state: present
     update_cache: true
-  with_items:
-    - build-essential
-    - gcc-multilib
-    - libxext-dev
-    - libxpm-dev
-    - x11proto-xext-dev
-    - mercurial
   when: ansible_architecture != "x86_64"
-    
+
 - name: Create directories
-  file: 
-    path: "{{ item }}" 
-    state: directory 
+  file:
+    path: "{{ item }}"
+    state: directory
   with_items:
     - "{{ download_dir }}"
     - "{{ inferno_home_dir }}"
 
 - name: Get Infeno source code from Vitanuova web site
-  get_url:
+  local_action:
+    module: get_url
     url: "http://www.vitanuova.com/dist/4e/{{ inferno_source_archive }}"
-    dest: "{{  download_dir }}"
-  register: archive
+    dest: "{{  download_dir }}/inferno.tgz"
 
-- name: Unarchive Inferno source code  
-  unarchive: src="{{ download_dir }}/{{ inferno_source_archive }}" dest={{ download_dir }} copy=no
-  when: archive|changed
-  
+- name: Unarchive Inferno source code
+  unarchive:
+    src: "{{  download_dir }}/inferno.tgz"
+    dest: "{{ download_dir }}"
+
 - name: Copy unarchived source code to Inferno home directory
-  command: "creates={{ inferno_home_dir }}/makemk.sh cp -r {{ download_dir }}/inferno/. {{ inferno_home_dir }}"
+  command:
+    cmd: "cp -r {{ download_dir }}/inferno/. {{ inferno_home_dir }}"
+    creates: "{{ inferno_home_dir }}/makemk.sh"
 
 - name: Pull the latest from official bitbucket repository
-  command: hg pull -uv chdir={{ inferno_home_dir }}
+  command:
+    cmd: hg pull -uv
+    chdir: "{{ inferno_home_dir }}"
   register: hg
   changed_when: "'no changes found' not in hg.stdout"
+  when: inferno_source_pull
+
+- name: Ensure dotfile exists
+  file:
+    path: "{{ dotfile }}"
+    state: touch
+    modification_time: preserve
+    access_time: preserve
 
 - name: Put environment variables to the dotfile
-  lineinfile: 
-    dest: "{{ dotfile }}" 
+  lineinfile:
+    dest: "{{ dotfile }}"
     line: "{{ item }}"
     insertafter: EOF
     state: present
   with_items:
-    - "export INFERNO_ROOT={{ inferno_home_dir }}" 
+    - "export INFERNO_ROOT={{ inferno_home_dir }}"
     - "export PATH=$INFERNO_ROOT/Linux/386/bin:$PATH"
-    - "export EMU=\"-r$INFERNO_ROOT -c0 -g1024x768\""
-  
+    - 'export EMU="-r$INFERNO_ROOT -c0 -g1024x768"'
+
 - name: Set up variables in mkconfig
-  lineinfile: 
-    dest: "{{ inferno_home_dir }}/mkconfig" 
+  lineinfile:
+    dest: "{{ inferno_home_dir }}/mkconfig"
     regexp: "{{ item.regexp }}"
     line: "{{ item.line }}"
     state: present
@@ -91,14 +116,15 @@
 
 # Consider the following: http://comments.gmane.org/gmane.os.inferno.general/5305
 - name: Add -fno-omit-frame-pointer to CFLAGS
-  lineinfile: 
-    dest: "{{ inferno_home_dir }}/mkfiles/mkfile-Linux-386" 
+  lineinfile:
+    dest: "{{ inferno_home_dir }}/mkfiles/mkfile-Linux-386"
     insertafter: "^CFLAGS="
     line: " -fno-omit-frame-pointer\\"
     state: present
-      
+
 - name: Compile Inferno
-  shell:  "./makemk.sh && mk -s nuke mkdirs install chdir={{ inferno_home_dir }}"
+  shell:
+    chdir: "{{ inferno_home_dir }}"
+    cmd: "./makemk.sh && mk -s nuke mkdirs install"
   environment:
     PATH: "{{ inferno_home_dir }}/Linux/386/bin:{{ ansible_env.PATH }}"
-   

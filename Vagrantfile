@@ -7,21 +7,21 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
 
   config.vm.box = "debian/jessie64"
   config.vm.box_version = "8.5.0"
-  #config.vm.box = "boxcutter/debian80-i386"
   config.vm.box_check_update = false
   config.ssh.insert_key = false
-  
+
   config.vm.hostname = "inferno"
   config.vm.network "private_network", ip: "192.168.33.10"
-  
+
   config.vm.define "inferno"
 
   config.vm.provider "virtualbox" do |vb|
     vb.name = "inferno"
     vb.customize ["modifyvm", :id, "--memory", "512"]
   end
-  
+
   config.vm.provision "ansible" do |ansible|
+    ansible.verbose = "vvv"
     ansible.playbook = "site.yml"
     ansible.inventory_path = "inventory"
   end

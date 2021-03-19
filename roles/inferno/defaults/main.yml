@@ -1,9 +1,17 @@
-#Variables for Inferno
+# Variables for Inferno
+
+# Mirrors
+enable_mirror: true
+mirror_urls:
+  - deb http://mirrors.tuna.tsinghua.edu.cn/debian/ jessie main contrib non-free
+  - deb http://mirrors.tuna.tsinghua.edu.cn/debian/ jessie-updates main contrib non-free
+  - deb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ jessie main contrib non-free
+  - deb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ jessie-updates main contrib non-free
 
 # Environment
 dotfile: /home/vagrant/.bashrc
 
-#Where to download and unpack
+# Where to download and unpack
 download_dir: /tmp
 
 # Where to install
@@ -12,4 +20,4 @@ inferno_home_dir: "/home/vagrant/inferno"
 # Sources
 inferno_source_archive: inferno-20150328.tgz
 inferno_source_repo: https://bitbucket.org/inferno-os/inferno-os
-
+inferno_source_pull: false
