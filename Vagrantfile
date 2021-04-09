@@ -4,11 +4,11 @@
 VAGRANTFILE_API_VERSION = "2"
 
 Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
+  config.vm.synced_folder ".", "/vagrant", type: "nfs"
 
   config.vm.box = "debian/jessie64"
   config.vm.box_version = "8.5.0"
   config.vm.box_check_update = false
-  config.ssh.insert_key = false
 
   config.vm.hostname = "inferno"
   config.vm.network "private_network", ip: "192.168.33.10"

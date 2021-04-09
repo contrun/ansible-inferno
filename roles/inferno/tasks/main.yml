@@ -58,21 +58,29 @@
     - "{{ download_dir }}"
     - "{{ inferno_home_dir }}"
 
+- name: "Check if {{ inferno_home_dir }} not empty"
+  stat:
+    path: "{{ inferno_home_dir }}/makemk.sh"
+  register: p
+
 - name: Get Infeno source code from Vitanuova web site
   local_action:
     module: get_url
     url: "http://www.vitanuova.com/dist/4e/{{ inferno_source_archive }}"
     dest: "{{  download_dir }}/inferno.tgz"
+  when: not p.stat.exists
 
 - name: Unarchive Inferno source code
   unarchive:
     src: "{{  download_dir }}/inferno.tgz"
     dest: "{{ download_dir }}"
+  when: not p.stat.exists
 
 - name: Copy unarchived source code to Inferno home directory
   command:
     cmd: "cp -r {{ download_dir }}/inferno/. {{ inferno_home_dir }}"
     creates: "{{ inferno_home_dir }}/makemk.sh"
+  when: not p.stat.exists
 
 - name: Pull the latest from official bitbucket repository
   command:

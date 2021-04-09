@@ -15,7 +15,7 @@ dotfile: /home/vagrant/.bashrc
 download_dir: /tmp
 
 # Where to install
-inferno_home_dir: "/home/vagrant/inferno"
+inferno_home_dir: "/vagrant/inferno"
 
 # Sources
 inferno_source_archive: inferno-20150328.tgz
