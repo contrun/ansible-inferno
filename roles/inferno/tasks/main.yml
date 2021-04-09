@@ -18,18 +18,20 @@
   command: "dpkg --add-architecture i386"
   when: arch.stdout.find('i386') == -1 and ansible_architecture == "x86_64"
 
-- name: Install all necessary libs and packages (64-bit)
-  become: yes
-  apt:
-    pkg:
+- set_fact:
+    common_pkgs:
+      - xauth
+      - xterm
       - apt-transport-https
       - ca-certificates
       - build-essential
       - gcc-multilib
-      - libxext-dev:i386
-      - libxpm-dev:i386
-      - x11proto-xext-dev:i386
       - mercurial
+
+- name: Install all necessary libs and packages (64-bit)
+  become: yes
+  apt:
+    pkg: "{{ common_pkgs + ['libxext-dev:i386', 'libxpm-dev:i386', 'x11proto-xext-dev:i386'] }}"
     state: present
     update_cache: true
   when: ansible_architecture == "x86_64"
@@ -37,15 +39,7 @@
 - name: Install all necessary libs and packages (32-bit)
   become: yes
   apt:
-    pkg:
-      - apt-transport-https
-      - ca-certificates
-      - build-essential
-      - gcc-multilib
-      - libxext-dev
-      - libxpm-dev
-      - x11proto-xext-dev
-      - mercurial
+    pkg: "{{ common_pkgs + ['libxext-dev', 'libxpm-dev', 'x11proto-xext-dev'] }}"
     state: present
     update_cache: true
   when: ansible_architecture != "x86_64"

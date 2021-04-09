@@ -9,6 +9,8 @@ Vagrant.configure(VAGRANTFILE_API_VERSION) do |config|
   config.vm.box = "debian/jessie64"
   config.vm.box_version = "8.5.0"
   config.vm.box_check_update = false
+  config.ssh.forward_agent = true
+  config.ssh.forward_x11 = true
 
   config.vm.hostname = "inferno"
   config.vm.network "private_network", ip: "192.168.33.10"

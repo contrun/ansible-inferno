@@ -9,7 +9,7 @@ mirror_urls:
   - deb-src http://mirrors.tuna.tsinghua.edu.cn/debian/ jessie-updates main contrib non-free
 
 # Environment
-dotfile: /home/vagrant/.bashrc
+dotfile: /home/vagrant/.bash_profile
 
 # Where to download and unpack
 download_dir: /tmp
